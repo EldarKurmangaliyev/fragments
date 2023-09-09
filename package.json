@@ -11,5 +11,8 @@
     "url": "git+https://github.com/yourname/fragments.git"
   },
   "author": "Eldar Kurmangaliyev",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "prettier": "3.0.3"
+  }
 }
