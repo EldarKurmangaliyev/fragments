@@ -1,0 +1,131 @@
+[33mcommit 76d9055d34eef057856784aa9bf984b71995d13a[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Mon Oct 16 15:41:47 2023 -0500
+
+    lab5 dockers
+
+[33mcommit ed812bb9fb3e66bfbb8ae046a9c010894fabce14[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Mon Oct 9 21:40:02 2023 -0500
+
+    Assignment1
+
+[33mcommit 2c7ee710d798ff748799ac9ecebbff041da5c324[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Mon Sep 25 18:10:12 2023 -0500
+
+    add response.js functions
+
+[33mcommit d18bad8bc005786924469655497b48a90d5124d7[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Mon Sep 25 17:47:10 2023 -0500
+
+    fix error 500 status
+
+[33mcommit 6bb9840a321323b1701693fb412bbe52e351ac69[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Mon Sep 25 17:43:27 2023 -0500
+
+    add error 500 status
+
+[33mcommit cad442ede5d2d10b02dd3b52f09970103c42b2aa[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Mon Sep 25 17:37:11 2023 -0500
+
+    added tests
+
+[33mcommit f0fe8e9bc2667ac87828b96a3c0996d4faede083[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Mon Sep 25 14:20:19 2023 -0500
+
+    fix error
+
+[33mcommit 5a54daf81f383cf6a411470cebcbe616412d9989[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Mon Sep 25 14:15:10 2023 -0500
+
+    put error
+
+[33mcommit 2f4e660fe39b78983e2e9f134aa7493ee4a37cf8[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Mon Sep 25 14:08:38 2023 -0500
+
+    Add CI workflow for running eslint
+
+[33mcommit f81259028277f2a5be1c0c500508e71214d721c2[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Mon Sep 18 12:56:32 2023 -0500
+
+    add auth.js
+
+[33mcommit ec2e66c62a9ffc702011a278ccbfb2cc636c58ea[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Mon Sep 18 04:40:57 2023 -0500
+
+    add routs
+
+[33mcommit 125fa42a9887a42342840e3cf5e420e71600dd92[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Mon Sep 18 04:23:10 2023 -0500
+
+    Switch to src/index.js as main entry point
+
+[33mcommit a4d08233992d09751037adb4ea1f754a7f07bc8e[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Mon Sep 18 03:14:01 2023 -0500
+
+    Add dotenv
+
+[33mcommit abd4c74c3a31519df5a18fbc19d11e4c970336fc[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Sat Sep 9 19:17:13 2023 -0500
+
+    Update README with details on running the server
+
+[33mcommit 93cca41abfb2295dfde3567823d93f9d350c9e83[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Sat Sep 9 19:01:48 2023 -0500
+
+    Add startup scripts, nodemon, and VSCode debug launch config,also cross-env
+
+[33mcommit d45bd17713528cd061c45b0e9dfb50d206c3cce9[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Sat Sep 9 18:46:08 2023 -0500
+
+    Initial work on express app and server
+
+[33mcommit 3cd13232a6712dc8a0df42561ae18adc8d86f853[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Sat Sep 9 18:15:35 2023 -0500
+
+    add nodejs into eslint
+
+[33mcommit c0b3ac182d49f6bae1f044341c86e8d06d455892[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Sat Sep 9 10:27:33 2023 -0500
+
+    Add pino logger
+
+[33mcommit 4be6a1606139e50b210c1dc388de47a899ee5390[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Sat Sep 9 10:16:22 2023 -0500
+
+    Add eslint
+
+[33mcommit da4e073b8c256bc4ecc0c9c65ba2f24645591bdc[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Sat Sep 9 10:07:43 2023 -0500
+
+    Add prettier
+
+[33mcommit 638a19a70df4ee5c5a3dbce3debceb2bb5c5c6c3[m
+Author: Eldar Kurmangaliyev <Ekurmangaliyev@myseneca.ca>
+Date:   Sat Sep 9 10:03:07 2023 -0500
+
+    Initial npm setup
+
+[33mcommit fea508763d2c7204a7c165e8be181d3020d53d58[m
+Author: Eldar Kurmangaliyev <Kurmangaliev-eldar@mail.ru>
+Date:   Fri Sep 8 02:12:14 2023 -0500
+
+    Initial commit

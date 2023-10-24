@@ -1,36 +1,33 @@
-#this is Docker file
-# FROM is must have to dedicate base for docker file
-FROM node:16.17.0
 
-LABEL maintainer="Eldar Kurmangaliyev <ekurmangaliyev@myseneca.ca>"
-LABEL description="Fragments node.js microservice"
+FROM node:16.17.0-alpine AS build
 
-# We default to use port 8080 in our service
-ENV PORT=8080
 
-# Reduce npm spam when installing within Docker
-ENV NPM_CONFIG_LOGLEVEL=warn
-
-# Disable colour when run inside Docker
-ENV NPM_CONFIG_COLOR=false
-
-# Use /app as our working directory
 WORKDIR /app
 
-# Copy the package.json and package-lock.json
-COPY package.json package-lock.json /app/
 
-# Install node dependencies defined in package-lock.json
-RUN npm install
+COPY package.json package-lock.json ./
+RUN npm install --only=production
 
-# Copy src to /app/src/
-COPY ./src ./src
 
-# Copy our HTPASSWD file
-COPY ./tests/.htpasswd ./tests/.htpasswd
+COPY src src
+COPY tests/.htpasswd tests/.htpasswd
 
-# Start the container by running our server
-CMD npm start
 
-# We run our service on port 8080
+FROM node:16.17.0-alpine AS production
+
+
+WORKDIR /app
+
+
+COPY --from=build /app ./
+
+
+ENV PORT=8080
+ENV NPM_CONFIG_LOGLEVEL=warn
+ENV NPM_CONFIG_COLOR=false
+
+
 EXPOSE 8080
+
+
+CMD ["npm", "start"]
