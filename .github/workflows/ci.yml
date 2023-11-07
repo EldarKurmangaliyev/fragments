@@ -15,46 +15,56 @@ on:
       - main
 
 jobs:
-        lint:
-          name: ESLint
-          runs-on: ubuntu-latest
-          steps:
-            - name: Check out code
-              uses: actions/checkout@v3
-      
-            - name: Setup node
-              uses: actions/setup-node@v3
-              with:
-                node-version: '18'
-                cache: 'npm'
-      
-            - name: Install node dependencies
-              run: npm ci
-      
-            - name: Run ESLint
-              run: npm run lint
-      
-        unit-tests:
-          name: Unit Tests
-          runs-on: ubuntu-latest
-          steps:
-            - name: Check out code
-              uses: actions/checkout@v3
-      
-            - name: Setup node
-              uses: actions/setup-node@v3
-              with:
-                node-version: '18'
-                cache: 'npm'
-      
-            - name: Install node dependencies and run Tests
-              # There are two ways we could do this:
-              #
-              # 1. Call `npm ci` followed by `npm test` like so (NOTE: the use of | and -):
-              # run: |
-              # - npm install
-              # - npm test
-              #
-              # 2. Use `install-ci-test` to do it in a single command, see https://docs.npmjs.com/cli/v8/commands/npm-install-ci-test
-              # run: npm install-ci-test
-              run: npm install-ci-test
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install node dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+  # Lint our Dockerfile using Hadolint
+  dockerfile-lint:
+    name: Dockerfile Lint
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/marketplace/actions/hadolint-action
+      - uses: actions/checkout@v3
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install node dependencies and run Tests
+        # There are two ways we could do this:
+        #
+        # 1. Call `npm ci` followed by `npm test` like so (NOTE: the use of | and -):
+        # run: |
+        # - npm install
+        # - npm test
+        #
+        # 2. Use `install-ci-test` to do it in a single command, see https://docs.npmjs.com/cli/v8/commands/npm-install-ci-test
+        # run: npm install-ci-test
+        run: npm install-ci-test
