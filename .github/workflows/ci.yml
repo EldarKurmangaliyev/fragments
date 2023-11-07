@@ -90,7 +90,7 @@ jobs:
       - name: Build and push
         env:
           # Define an Environment Variable with our Docker Hub Repo
-          # Replace `username` with your Docker Hub username and `fragments
+          # Replace `username` with your Docker Hub username and `fragmentss
           # with whatever you've named your Docker Hub repo
           DOCKERHUB_REPO: username/fragments
           # Define an Environment Variable with the current git commit's2
