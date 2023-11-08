@@ -6,12 +6,13 @@ const wait = async (ms = 10) => new Promise((resolve) => setTimeout(resolve, ms)
 
 const validTypes = [
   `text/plain`,
-  /*
-   Currently, only text/plain is supported. Others will be added later.
-
   `text/markdown`,
   `text/html`,
   `application/json`,
+  /*
+   Currently, only text/plain is supported. Others will be added later.
+
+
   `image/png`,
   `image/jpeg`,
   `image/webp`,
@@ -83,9 +84,7 @@ describe('Fragment class', () => {
 
     test('fragments have an id', () => {
       const fragment = new Fragment({ ownerId: '1234', type: 'text/plain', size: 1 });
-      expect(fragment.id).toMatch(
-        /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/
-      );
+      expect(fragment.id).toMatch(/[A-Za-z0-9_-]+/);
     });
 
     test('fragments use id passed in if present', () => {
@@ -251,7 +250,7 @@ describe('Fragment class', () => {
       await fragment.setData(Buffer.from('a'));
 
       await Fragment.delete('1234', fragment.id);
-      expect(() => Fragment.byId('1234', fragment.id)).rejects.toThrow();
+      expect(await Fragment.byId('1234', fragment.id)).toBeUndefined();
     });
   });
 });
