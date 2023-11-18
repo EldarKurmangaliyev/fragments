@@ -1,29 +1,45 @@
-const { createSuccessResponse, createErrorResponse } = require('../../response');
-const { Fragment } = require('../../model/fragment');
+// src/routes/api/post.js
+
+// Our response handlers
 const logger = require('../../logger');
+const response = require('../../response');
+const { saveFragment } = require('./util/fragmentMethods');
 
-module.exports = async (req, res) => {
-  logger.debug('Post: ' + req.body);
+module.exports = (req, res) => {
+  logger.info(`Received new request: ${req}`);
 
+  // req.body is the data, and rawBody returns either Buffer or {}
+  // Check if we have buffer, otherwise we can't save this, and create error response.
   if (!Buffer.isBuffer(req.body)) {
-    return res.status(415).json(createErrorResponse(415, 'Unsupported Media Type'));
-  }
-
-  try {
-    const fragment = new Fragment({ ownerId: req.user, type: req.get('Content-Type') });
-    await fragment.save();
-    await fragment.setData(req.body);
-
-    logger.debug('New fragment created: ' + JSON.stringify(fragment));
-
-    res.set('Content-Type', fragment.type);
-    res.set('Location', `${process.env.API_URL}/v1/fragments/${fragment.id}`);
-    res.status(201).json(
-      createSuccessResponse({
-        fragment: fragment,
+    res.status(415).json(
+      response.createErrorResponse({
+        status: 'error',
+        error: {
+          message: 'Body requires correct data that is supported.',
+          code: 415,
+        },
       })
     );
-  } catch (err) {
-    res.status(500).json(createErrorResponse(500, err));
   }
+
+  // Use saveFragment to create and save a new fragment and the data.
+  saveFragment(req)
+    .then((fragment) => {
+      logger.info(`Received fragment saved request: ${fragment}`);
+
+      // Set the appropriate headers in the response
+      res.setHeader('Content-Type', fragment.type);
+      res.setHeader('Location', `${process.env.API_URL}/v1/fragments/${fragment.id}`);
+
+      // Attach the response
+      console.log('FRAGMENT IS CREATED');
+      console.log(fragment.id);
+      res.status(201).json(
+        response.createSuccessResponse({
+          status: 'ok',
+          fragment: fragment,
+        })
+      );
+    })
+    .catch((e) => console.log('error creating new fragment: ', e));
 };

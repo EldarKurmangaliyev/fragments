@@ -1,14 +1,8 @@
-// Use crypto.randomUUID() to create unique IDs, see:
-// https://nodejs.org/api/crypto.html#cryptorandomuuidoptions
 const { randomUUID } = require('crypto');
 // Use https://www.npmjs.com/package/content-type to create/parse Content-Type headers
 const contentType = require('content-type');
-const md = require('markdown-it')({
-  html: true,
-});
-const sharp = require('sharp');
-var mime = require('mime-types');
-// Functions for working with fragment metadata/data using our DB
+
+// Functions for working with fragment metadata/data using our DB(aws(s3 and DynamoDB) or memoryDB)
 const {
   readFragment,
   writeFragment,
@@ -16,39 +10,93 @@ const {
   writeFragmentData,
   listFragments,
   deleteFragment,
-} = require('./data');
+  deleteFragmentData,
+} = require('./data/index');
+const logger = require('../../src/logger');
 
-const logger = require('../logger');
-
-const validTypes = [
+/**
+ * List of supported formats accepted and supported.
+ */
+const supportedFormats = [
   'text/plain',
+  'text/plain; charset=utf-8',
   'text/markdown',
   'text/html',
   'application/json',
   'image/png',
-  'image/jpeg',
+  'image/jpeg	',
   'image/webp',
   'image/gif',
 ];
 
+/**
+ * List of conversion extensions allowed for each mimeType.
+ * Each element in the array contains an object of
+ * @type {string} - describes the mimetype
+ * @conversionExtensions - an array of strings with the extensions allowed to be converted into.
+ * NOTE: The first conversion extension is the extension for the specific mimetype
+ */
+const conversions = [
+  {
+    type: 'text/plain',
+    conversionExtensions: ['.txt'],
+  },
+  {
+    type: 'text/markdown',
+    conversionExtensions: ['.md', '.html', '.txt'],
+  },
+  {
+    type: 'text/html',
+    conversionExtensions: ['.html', '.txt'],
+  },
+  {
+    type: 'application/json',
+    conversionExtensions: ['.json', '.txt'],
+  },
+  {
+    type: 'image/png',
+    conversionExtensions: ['.png', '.jpg', '.webp', '.gif'],
+  },
+  {
+    type: 'image/jpg',
+    conversionExtensions: ['.jpg', '.png', '.webp', '.gif'],
+  },
+  {
+    type: 'image/webp',
+    conversionExtensions: ['.webp', '.jpg', '.png', '.gif'],
+  },
+  {
+    type: 'image/gif',
+    conversionExtensions: ['.gif', '.jpg', '.webp', '.png'],
+  },
+];
+
 class Fragment {
-  constructor({ id, ownerId, type, size = 0 }) {
-    if (!ownerId || !type) {
-      throw new Error('owner id and type is required');
-    } else if (typeof size !== 'number') {
-      throw new Error('size must be a number');
-    } else if (size < 0) {
-      throw new Error('size cannot be negative');
-    } else if (!Fragment.isSupportedType(type)) {
-      throw new Error('invalid type');
-    } else {
-      this.id = id || randomUUID();
-      this.ownerId = ownerId;
-      this.created = new Date().toISOString();
-      this.updated = new Date().toISOString();
-      this.type = type;
-      this.size = size;
+  constructor({ id = randomUUID(), ownerId, created, updated, type, size = 0 }) {
+    if (Math.sign(size) < 0 || !Number.isInteger(size)) {
+      throw new Error(`Size must be a positive number, got size=${size}`);
     }
+
+    if (!supportedFormats.includes(type)) {
+      throw new Error(
+        `Type is not supported, must be one of
+        ${supportedFormats}
+        but got ${type}`
+      );
+    }
+
+    if (!ownerId) {
+      throw new Error(`Missing parameter: ownerId, received ${ownerId}`);
+    }
+
+    this.id = id;
+    this.ownerId = ownerId;
+    // If we don't receive a date(created = null), then we set the date.
+    this.created = created || new Date().toISOString();
+    this.updated = updated || new Date().toISOString();
+    this.type = type;
+    this.size = size;
+    logger.debug(`Fragment.js - Constructor - type:  ${this.type}`);
   }
 
   /**
@@ -57,12 +105,8 @@ class Fragment {
    * @param {boolean} expand whether to expand ids to full fragments
    * @returns Promise<Array<Fragment>>
    */
-  static async byUser(ownerId, expand = false) {
-    try {
-      return await listFragments(ownerId, expand);
-    } catch (err) {
-      throw new Error('Error getting frgaments');
-    }
+  static byUser(ownerId, expand = false) {
+    return listFragments(ownerId, expand);
   }
 
   /**
@@ -71,17 +115,8 @@ class Fragment {
    * @param {string} id fragment's id
    * @returns Promise<Fragment>
    */
-  static async byId(ownerId, id) {
-    try {
-      const frag = await readFragment(ownerId, id);
-      if (frag && frag instanceof Fragment === false) {
-        return new Fragment(frag);
-      } else {
-        return frag;
-      }
-    } catch (err) {
-      throw new Error('Error reading frgaments');
-    }
+  static byId(ownerId, id) {
+    return readFragment(ownerId, id);
   }
 
   /**
@@ -91,23 +126,36 @@ class Fragment {
    * @returns Promise
    */
   static async delete(ownerId, id) {
-    try {
-      return await deleteFragment(ownerId, id);
-    } catch (err) {
-      throw new Error('Error deleting fragments');
-    }
+    return deleteFragment(ownerId, id) && deleteFragmentData(ownerId, id);
   }
 
   /**
    * Saves the current fragment to the database
    * @returns Promise
    */
-  save() {
+  async save() {
+    logger.debug(`Fragment.js - Save() - Time before update: ${this.updated}`);
+    this.updated = new Date().toISOString();
+    logger.debug(
+      `Fragment.js - Save() - Time after update: ${this.updated} time now: ${new Date()}`
+    );
+    let fragment = {
+      id: this.id,
+      ownerId: this.ownerId,
+      created: this.created,
+      updated: this.updated,
+      type: this.type,
+      size: this.size,
+    };
     try {
-      this.updated = new Date().toISOString();
-      return writeFragment(this);
-    } catch (err) {
-      throw new Error('Error saving fragments');
+      const f = await writeFragment(fragment);
+      logger.debug(
+        `Fragment.js - Constructor - saved new fragment:  ${fragment.id} for owner: ${this.ownerId} at ${this.updated}`
+      );
+      return f;
+    } catch (e) {
+      logger.error(`Fragment.js - Constructor - Could not create new fragment`);
+      throw e;
     }
   }
 
@@ -117,9 +165,12 @@ class Fragment {
    */
   async getData() {
     try {
-      return await readFragmentData(this.ownerId, this.id);
-    } catch (err) {
-      throw new Error('Error readind fragments');
+      const f = await readFragmentData(this.ownerId, this.id);
+      return f;
+    } catch (e) {
+      logger.error(
+        `Fragment.js - getData() - Could not fetch data for the fragment with id: ${this.id}`
+      );
     }
   }
 
@@ -130,15 +181,17 @@ class Fragment {
    */
   async setData(data) {
     if (!Buffer.isBuffer(data)) {
-      throw new Error('data is not a Buffer');
-    } else {
-      this.size = Buffer.byteLength(data);
+      throw new Error(`Data must be of buffer type`);
+    }
+    this.updated = new Date().toISOString();
+    this.size = Buffer.byteLength(data);
+
+    try {
       this.save();
-      try {
-        return await writeFragmentData(this.ownerId, this.id, data);
-      } catch (err) {
-        throw new Error('Error setting fragments');
-      }
+      const f = await writeFragmentData(this.ownerId, this.id, data);
+      return f;
+    } catch (e) {
+      logger.error(`There was an error setting data: ${e}`);
     }
   }
 
@@ -153,15 +206,25 @@ class Fragment {
   }
 
   /**
-   * Returns true if this fragment is a text/* mime type
-   * @returns {boolean} true if fragment's type is text/*
+   * Returns the mime type (e.g., without encoding) for the fragment's extension provided:
+   * ".txt" -> "text/html"
+   * @param {string} ext: the extension you wish to find the type for. Must be supported mimeType.
+   * @returns {string} fragment's mime type (without encoding)
+   */
+  mimeTypeByExtension(ext) {
+    let conversion = conversions.find((conversion) => conversion.conversionExtensions[0] === ext);
+
+    return conversion.type;
+  }
+
+  /**
+   * @returns {boolean} true if type is text/plain
    */
   get isText() {
-    if (this.mimeType.match(/text\/+/)) {
-      return true;
-    } else {
-      return false;
-    }
+    const isText = this.type.includes('text/plain');
+    logger.info(`Fragment.js - isText - type:  ${isText}`);
+
+    return isText;
   }
 
   /**
@@ -169,17 +232,8 @@ class Fragment {
    * @returns {Array<string>} list of supported mime types
    */
   get formats() {
-    if (this.mimeType === 'text/plain') {
-      return ['text/plain'];
-    } else if (this.mimeType === 'text/markdown') {
-      return ['text/plain', 'text/markdown', 'text/html'];
-    } else if (this.mimeType === 'text/html') {
-      return ['text/plain', 'text/html'];
-    } else if (this.mimeType === 'application/json') {
-      return ['text/plain', 'application/json'];
-    } else {
-      return ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
-    }
+    const conversionObject = conversions.find(({ type }) => type === this.mimeType);
+    return conversionObject.conversionExtensions;
   }
 
   /**
@@ -188,39 +242,12 @@ class Fragment {
    * @returns {boolean} true if we support this Content-Type (i.e., type/subtype)
    */
   static isSupportedType(value) {
-    logger.debug('isSupportedType: ' + value);
-    let result = validTypes.some((element) => value.includes(element));
-    return result;
-  }
-  /**
-   * Returns the data converted to the desired type
-   * @param {Buffer} data fragment data to be converted
-   * @param {string} extension the type extension you want to convert to (desired type)
-   * @returns {Buffer} converted fragment data
-   */
-  async convertType(data, extension) {
-    let desiredType = mime.lookup(extension);
-    const avail = this.formats;
-    if (!avail.includes(desiredType)) {
-      logger.warn('Cant covert to this  type');
-      return false;
-    }
-    let resultdata = data;
-    if (this.mimeType !== desiredType) {
-      if (this.mimeType === 'text/markdown' && desiredType === 'text/html') {
-        resultdata = md.render(data.toString());
-        resultdata = Buffer.from(resultdata);
-      } else if (desiredType === 'image/jpeg') {
-        resultdata = await sharp(data).jpeg().toBuffer();
-      } else if (desiredType === 'image/png') {
-        resultdata = await sharp(data).png().toBuffer();
-      } else if (desiredType === 'image/webp') {
-        resultdata = await sharp(data).webp().toBuffer();
-      } else if (desiredType === 'image/gif') {
-        resultdata = await sharp(data).gif().toBuffer();
-      }
-    }
-    return { resultdata, convertedType: desiredType };
+    // Change this to getFormats to see if its one of those, and then return (as we update the types supported)
+    let isSupported = supportedFormats.includes(value);
+    logger.info(
+      `Fragment - isSupportType - Value of ${value} ${isSupported ? 'is' : 'is not'} supported.`
+    );
+    return isSupported;
   }
 }
 

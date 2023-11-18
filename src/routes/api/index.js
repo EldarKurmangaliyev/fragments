@@ -31,7 +31,7 @@ const rawBody = () =>
   });
 
 router.post('/fragments', rawBody(), require('./post'));
-router.get('/fragments/:id', require('./get-by-id'));
-router.get('/fragments/:id/info', require('./get-by-id-info'));
+router.get('/fragments/:id', require('./getDataById'));
+router.get('/fragments/:id/info', require('./getMetadataById'));
 
 module.exports = router;

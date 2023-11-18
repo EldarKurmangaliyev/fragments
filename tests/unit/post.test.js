@@ -26,7 +26,7 @@ describe('POST /v1/fragments', () => {
       .post('/v1/fragments')
       .auth('user1@email.com', 'password1')
       .send();
-    expect(res.statusCode).toBe(500);
+    expect(res.statusCode).toBe(415);
   });
   test('response include a Location header with a URL to GET the fragment', async () => {
     const res = await request(app)
